@@ -199,7 +199,6 @@ def main():
 5. Use .cpu() or .to('cpu') before converting to NumPy
 6. In-place operations (with _) modify tensor directly
 """)
-    print("\nNext: Run 03_memory_management.py to learn about VRAM.")
 
 
 if __name__ == "__main__":

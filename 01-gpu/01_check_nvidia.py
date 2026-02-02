@@ -155,7 +155,6 @@ def main():
 
     if driver_ok:# and pytorch_ok:
         print("\nAll checks PASSED! Your GPU is ready for the course.")
-        print("\nNext: Run 02_cuda_basics.py to learn tensor operations.")
     else:
         print("\nSome checks FAILED. Please fix the issues above.")
         sys.exit(1)

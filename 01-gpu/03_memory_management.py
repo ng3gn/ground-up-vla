@@ -242,7 +242,6 @@ def main():
 5. Monitor with torch.cuda.memory_allocated/reserved()
 6. For limited VRAM: smaller batches, fp16, gradient checkpointing
 """)
-    print("\nNext: Run 04_cpu_vs_gpu_timing.py to compare performance.")
 
 
 if __name__ == "__main__":
