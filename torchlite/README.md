@@ -345,8 +345,9 @@ for epoch in range(n_epochs):
     # Log and print progress
     if epoch % 20 == 0:
         logger.log_epoch(epoch, X, pred, loss,
-                        parameters={'layer0_weight': (model.layers[0].weight,
-                                                     model.layers[0].weight.grad)})
+                        parameters={'layer0_weight':
+                                    (model.layers[0].weight,
+                                     model.layers[0].weight.grad)})
         print(f"Epoch {epoch}: Loss = {loss.item():.6f}")
 
 # Visualize training
@@ -465,15 +466,15 @@ TorchLite is educational software with intentional limitations:
 
 ## Comparison to PyTorch
 
-| Feature | TorchLite | PyTorch |
-|---------|-----------|---------|
-| Automatic differentiation | ✅ | ✅ |
-| GPU support | ❌ | ✅ |
-| Readable source | ✅ | ❌ |
-| Production ready | ❌ | ✅ |
-| Lines of code | ~1,200 | ~1,000,000+ |
-| Dependencies | numpy | cuda, cudnn, etc. |
-| Learning curve | Gentle | Steep |
+| Feature                   | TorchLite   | PyTorch           |
+| ---------                 | ----------- | ---------         |
+| Automatic differentiation | ✅          | ✅                |
+| GPU support               | ❌          | ✅                |
+| Readable source           | ✅          | ❌                |
+| Production ready          | ❌          | ✅                |
+| Lines of code             | ~1,200      | ~1,000,000+       |
+| Dependencies              | numpy       | cuda, cudnn, etc. |
+| Learning curve            | Gentle      | Steep             |
 
 **When to use TorchLite:**
 - You're learning neural networks for the first time
@@ -514,7 +515,8 @@ assert params[0].data[0] == 0.9  # 1.0 - 0.1 * 1.0
 
 ## Contributing
 
-TorchLite is intentionally minimal. If you find bugs or have suggestions for clearer implementations, contributions are welcome. Keep in mind:
+TorchLite is intentionally minimal. If you find bugs or have suggestions for
+clearer implementations, contributions are welcome. Keep in mind:
 
 - Educational clarity is the priority
 - Keep it simple and readable
@@ -530,6 +532,3 @@ This is educational software intended for learning purposes.
 TorchLite's design is inspired by:
 - PyTorch's API design
 - Andrej Karpathy's micrograd
-- The Feynman principle: "What I cannot create, I do not understand"
-
-Built with love for learners by learners! 🚀
