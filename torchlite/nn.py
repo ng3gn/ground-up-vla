@@ -47,9 +47,11 @@ class Linear(Module):
 
         # Initialize weights with small random values
         # Using He initialization: scale by sqrt(2/in_features)
+        # Stored as (in_features, out_features) so forward pass can do x @ W
+        # directly without transposing, which keeps the computation graph intact.
         scale = np.sqrt(2.0 / in_features)
         self.weight = Tensor(
-            np.random.randn(out_features, in_features) * scale,
+            np.random.randn(in_features, out_features) * scale,
             requires_grad=True
         )
 
@@ -65,7 +67,7 @@ class Linear(Module):
 
     def forward(self, x):
         """
-        Forward pass: y = x @ W.T + b
+        Forward pass: y = x @ W + b
 
         Args:
             x: Input tensor of shape (..., in_features)
@@ -73,12 +75,10 @@ class Linear(Module):
         Returns:
             Output tensor of shape (..., out_features)
         """
-        # Matrix multiplication: (batch, in) @ (in, out).T = (batch, out)
-        out = x @ self.weight.reshape(self.out_features, self.in_features).data.T
-
-        # Convert to Tensor if needed
-        if not isinstance(out, Tensor):
-            out = Tensor(out, requires_grad=x.requires_grad or self.weight.requires_grad)
+        # Matrix multiplication: (batch, in) @ (in, out) = (batch, out)
+        # Weight is stored as (in, out) so we can matmul directly with the
+        # Tensor object, keeping it in the computation graph for backprop.
+        out = x @ self.weight
 
         # Add bias
         if self.use_bias:

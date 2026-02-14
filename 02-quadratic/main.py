@@ -106,7 +106,7 @@ def graph_results(results_lite, results_full):
 
     # Create a figure with multiple subplots
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    fig.suptitle('TorchLite vs PyTorch Model Comparison',
+    fig.suptitle('TorchLite vs PyTorch Model Comparison\nLearning: f(x₀, x₁) = x₀² + x₁²',
                  fontsize=16, fontweight='bold')
 
     # Plot 1: Predictions vs Actual for TorchLite
