@@ -1,6 +1,7 @@
 # NL2Bash Data
 
-This repository clone only contains the raw data.
+This repository clone only contains the raw data in all.cm and all.nl.
+
 See the original at
 https://github.com/TellinaTool/nl2bash/blob/master/data/
 
