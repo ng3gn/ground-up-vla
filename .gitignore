@@ -1,3 +1,6 @@
 __pycache__
 output
 outputs
+
+# Generated vocabulary files
+*_vocab.txt

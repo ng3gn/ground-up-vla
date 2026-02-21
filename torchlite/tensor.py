@@ -177,12 +177,23 @@ class Tensor:
             if self.requires_grad:
                 if self.grad is None:
                     self.grad = np.zeros_like(self.data)
-                self.grad += out.grad @ other.data.T
+                # Use swapaxes for batched matmul support (works for 2D, 3D, 4D)
+                grad = out.grad @ np.swapaxes(other.data, -2, -1)
+                # Handle broadcasting: sum out extra leading dims
+                ndims_added = grad.ndim - self.data.ndim
+                for _ in range(ndims_added):
+                    grad = grad.sum(axis=0)
+                self.grad += grad
 
             if other.requires_grad:
                 if other.grad is None:
                     other.grad = np.zeros_like(other.data)
-                other.grad += self.data.T @ out.grad
+                grad = np.swapaxes(self.data, -2, -1) @ out.grad
+                # Handle broadcasting: sum out extra leading dims
+                ndims_added = grad.ndim - other.data.ndim
+                for _ in range(ndims_added):
+                    grad = grad.sum(axis=0)
+                other.grad += grad
 
         out._backward = _backward
         return out
@@ -382,8 +393,116 @@ class Tensor:
     # =========================
 
     def reshape(self, *shape):
-        """Reshape the tensor (doesn't require gradient tracking for now)"""
-        return Tensor(self.data.reshape(*shape), requires_grad=self.requires_grad)
+        """
+        Reshape the tensor with gradient support.
+
+        During backward pass:
+        - Gradient is reshaped back to original shape
+        """
+        out = Tensor(self.data.reshape(*shape),
+                    requires_grad=self.requires_grad,
+                    _children=(self,), _op='reshape')
+        original_shape = self.data.shape
+
+        def _backward():
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+                self.grad += out.grad.reshape(original_shape)
+
+        out._backward = _backward
+        return out
+
+    def transpose(self, *axes):
+        """
+        Transpose (permute) axes of the tensor.
+
+        During backward pass:
+        - Gradient is transposed with inverse permutation
+        """
+        out = Tensor(self.data.transpose(*axes),
+                    requires_grad=self.requires_grad,
+                    _children=(self,), _op='transpose')
+        # Compute inverse permutation for backward
+        inv_axes = [0] * len(axes)
+        for i, a in enumerate(axes):
+            inv_axes[a] = i
+
+        def _backward():
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+                self.grad += out.grad.transpose(*inv_axes)
+
+        out._backward = _backward
+        return out
+
+    def softmax(self, axis=-1):
+        """
+        Softmax: converts logits to probabilities.
+
+        During backward pass:
+        - d_input = s * (d_out - sum(d_out * s, axis, keepdims=True))
+        """
+        # Numerical stability: subtract max
+        x_max = np.max(self.data, axis=axis, keepdims=True)
+        exp_x = np.exp(self.data - x_max)
+        s = exp_x / np.sum(exp_x, axis=axis, keepdims=True)
+
+        out = Tensor(s, requires_grad=self.requires_grad,
+                    _children=(self,), _op='softmax')
+
+        def _backward():
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+                # Softmax backward: s * (d_out - sum(d_out * s, axis))
+                dot = np.sum(out.grad * s, axis=axis, keepdims=True)
+                self.grad += s * (out.grad - dot)
+
+        out._backward = _backward
+        return out
+
+    def log(self):
+        """
+        Natural logarithm.
+
+        During backward pass:
+        - d_input = d_out / data
+        """
+        eps = 1e-12
+        out = Tensor(np.log(self.data + eps),
+                    requires_grad=self.requires_grad,
+                    _children=(self,), _op='log')
+
+        def _backward():
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+                self.grad += out.grad / (self.data + eps)
+
+        out._backward = _backward
+        return out
+
+    def exp(self):
+        """
+        Exponential.
+
+        During backward pass:
+        - d_input = exp(data) * d_out
+        """
+        exp_data = np.exp(self.data)
+        out = Tensor(exp_data, requires_grad=self.requires_grad,
+                    _children=(self,), _op='exp')
+
+        def _backward():
+            if self.requires_grad:
+                if self.grad is None:
+                    self.grad = np.zeros_like(self.data)
+                self.grad += exp_data * out.grad
+
+        out._backward = _backward
+        return out
 
     def item(self):
         """Get the value as a Python scalar (for single-element tensors)"""
